@@ -76,11 +76,11 @@ selectActividad.change(async function () {
       <tr>
         <td>${miembro.nombre} ${miembro.apellido}</td>
         <td>
-          <input type="text" class="form-control cantidad-miembro"
+          <input type="number" step="any" class="form-control cantidad-miembro"
             data-id="${miembro.id}" value="${cantidad}">
         </td>
         <td>
-          <input type="number" class="form-control total"
+          <input type="number" step="any" class="form-control total"
             data-id="${miembro.id}" value="${total}" readonly>
         </td>
       </tr>
@@ -220,6 +220,7 @@ formAsignaciones.submit(async function (e) {
     alert("Error al guardar asignaciones");
   } finally {
     ocultarLoading();
+     loadPage("frontActividades", "admin/");
   }
 });
 

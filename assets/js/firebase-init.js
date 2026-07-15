@@ -19,3 +19,10 @@ window.auth = firebase.auth();
 window.db = firebase.firestore();
 
 console.log("🔥 Firebase inicializado correctamente");
+// 🔔 1. Función para formatear fecha
+function formatearFecha(timestamp) {
+   if (!timestamp) return "";
+
+   const fecha = timestamp.toDate();
+   return fecha.toLocaleString();
+}

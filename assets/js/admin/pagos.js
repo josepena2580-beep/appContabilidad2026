@@ -6,7 +6,7 @@ var miembrosSelect = $("#miembrosSelect");
 
 miembrosSelect.off("change").on("change", function () {
   const miembroId = $(this).val();
-  const miembroNombre = $(this).find("option:selected").text();
+  let miembroNombre = $(this).find("option:selected").text();
   if (miembroId) {
     cargarDeudas(miembroId, miembroNombre);
   }
@@ -91,11 +91,18 @@ $("#formModalMonto").submit(async function (e) {
   const db = firebase.firestore();
   const miembroRef = db.collection("miembros").doc(miembroIdSeleccionado);
   const actividadRef = miembroRef.collection("actividades").doc(actividadIdSeleccionada);
+   
+
 
   try {
     await db.runTransaction(async (tx) => {
       const actividadSnap = await tx.get(actividadRef);
       const miembroSnap = await tx.get(miembroRef);
+      
+        const nombreMiembro = miembroSnap.data().nombre;
+        const apellidoMiembro = miembroSnap.data().apellido;
+        const nombreActividad = actividadSnap.data().actividadNombre;
+       
 
       if (!actividadSnap.exists) throw "Actividad no encontrada";
 
@@ -148,11 +155,31 @@ $("#formModalMonto").submit(async function (e) {
       tx.update(miembroRef, {
         "resumen.totalPagado": (resumen.totalPagado || 0) + deltaPagado
       });
+        // 🔔 NOTIFICACIÓN DENTRO DE LA TRANSACCIÓN
+  const notiRef = db.collection("Notificaciones").doc();
+  
+  tx.set(notiRef, {
+    titulo: "Nuevo pago registrado",
+    mensaje: " * " + nombreMiembro +" "+apellidoMiembro+
+              " realizó un pago de " + monto +
+              " pesos de la actividad " + nombreActividad,
+    fecha: firebase.firestore.FieldValue.serverTimestamp(),
+    leido: false,
+    miembroId: miembroIdSeleccionado,
+    actividadId: actividadIdSeleccionada,
+    
+  });
+     miembroNombre = nombreMiembro +" "+apellidoMiembro
     });
-
+       
     alert("Pago actualizado correctamente");
     modal.hide();
-    cargarDeudas(miembroIdSeleccionado);
+   
+    cargarDeudas(miembroIdSeleccionado, miembroNombre);
+
+
+
+
 
   } catch (err) {
     console.error(err);
@@ -161,4 +188,5 @@ $("#formModalMonto").submit(async function (e) {
     ocultarLoading();
   }
 });
+
 

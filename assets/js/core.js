@@ -67,6 +67,7 @@ firebase.auth().onAuthStateChanged(function (user) {
             loadPage("login");
           }
         } else {
+          alert("usuario no valido");
           console.warn("Usuario sin documento en Firestore");
           loadPage("login");
         }
@@ -76,7 +77,7 @@ firebase.auth().onAuthStateChanged(function (user) {
         loadPage("login");
       });
 
-  } else {
+  } else {   
     console.log("No hay usuario autenticado");
     loadPage("login");
   }
@@ -213,6 +214,7 @@ function renderGastosForm(gastos = []) {
       }">
     </div>
   </div>
+  <br>
 `);
   }
 }
@@ -222,6 +224,7 @@ async function cargarDeudas(miembroId, nombreMiembro) {
   tablaBody.empty();
 
   let totalGeneral = 0;
+  let deudas = [];
 
   mostrarLoading();
 
@@ -238,13 +241,10 @@ async function cargarDeudas(miembroId, nombreMiembro) {
       tabla.addClass("d-none");
       alert(`El miembro ${nombreMiembro} no tiene actividades registradas.`);
       return;
-    }
-
-    let deudas = [];
+    }   
 
     actividadesSnap.forEach(doc => {
       const d = doc.data();
-
       
       const totalPagado = d.totalPagado || 0;
       const total = d.total || 0;
@@ -315,6 +315,128 @@ async function cargarDeudas(miembroId, nombreMiembro) {
   } finally {
     ocultarLoading();
   }
+
+    // ===============================
+// GENERAR PDF
+// ===============================
+
+ $("#btnImprimirPDF").off("click").on("click", function () {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Encabezado centrado
+    const anchoPagina = doc.internal.pageSize.getWidth();
+
+    doc.setFontSize(18);
+    doc.setFont(undefined, "bold");
+    doc.text("MOVIMIENTO MISIONERO MUNDIAL", anchoPagina / 2, 15, {
+      align: "center"
+    });
+
+    doc.setFontSize(14);
+    doc.text("IGLESIA DE TIERRALTA - LORICA", anchoPagina / 2, 23, {
+      align: "center"
+    });
+
+    doc.setFontSize(12);
+    doc.text("RESUMEN DE DEUDA", anchoPagina / 2, 33, {
+      align: "center"
+    });
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, "bold");
+    doc.text(`Miembro: ${nombreMiembro}`, anchoPagina / 2, 42, {
+      align: "center"
+    });
+
+   // Solo mostrar actividades que aún tienen deuda
+const filas = deudas
+  .filter(d => Number(d.deudaActual) > 0)
+  .map(d => [
+    d.actividad,
+    `$${d.valorDeuda.toLocaleString()}`,
+    `$${d.totalPagado.toLocaleString()}`,
+    `$${d.deudaActual.toLocaleString()}`
+  ]);
+
+    // Fila total
+    filas.push([
+      "",
+      "",
+      "TOTAL DEUDA",
+      `$${totalGeneral.toLocaleString()}`
+    ]);
+
+   doc.autoTable({
+  startY: 50,
+  head: [[
+    "Actividad",
+    "Valor Actividad",
+    "Pagado",
+    "Debe"
+  ]],
+  body: filas,
+  theme: "grid",
+
+  headStyles: {
+    halign: "center",
+    fontStyle: "bold"
+  },
+
+  // Filas alternadas
+  alternateRowStyles: {
+    fillColor: [245, 245, 245] // Gris muy claro
+  },
+
+  bodyStyles: {
+    fillColor: [255, 255, 255] // Blanco
+  },
+
+  columnStyles: {
+    1: { halign: "right" },
+    2: { halign: "right" },
+    3: { halign: "right" }
+  },
+
+  didParseCell: function (data) {
+
+    // Resaltar la fila TOTAL DEUDA
+    if (
+      data.section === "body" &&
+      data.row.index === filas.length - 1
+    ) {
+      data.cell.styles.fontStyle = "bold";
+      data.cell.styles.fillColor = [220, 220, 220];
+
+      if (data.column.index === 3) {
+        data.cell.styles.fontSize = 16;
+      } else {
+        data.cell.styles.fontSize = 13;
+      }
+    }
+  }
+});
+    const fechaActual = new Date();
+
+const fechaFormateada =
+  fechaActual.toLocaleDateString("es-CO") +
+  " " +
+  fechaActual.toLocaleTimeString("es-CO");
+
+doc.setFontSize(10);
+
+doc.text(
+  `Fecha de impresión: ${fechaFormateada}`,
+  doc.internal.pageSize.getWidth() - 14,
+  doc.lastAutoTable.finalY + 10,
+  { align: "right" }
+);
+
+    doc.save(`Resumen_Deuda_${nombreMiembro}.pdf`);
+});
+  
+
 }
 
 async function cargarMiembros2() {
@@ -358,6 +480,7 @@ async function cargarMiembros2() {
   } finally {
     ocultarLoading(); // ✅ Ocultar spinner
   }
+ 
 }
 function entradaFondo() {
   const formEntrada = document.getElementById("formEntrada");
@@ -374,7 +497,7 @@ function entradaFondo() {
       alert("Por favor complete todos los campos correctamente.");
       return;
     }
-
+     mostrarLoading();
     try {
       await firebase
         .firestore()
@@ -387,12 +510,25 @@ function entradaFondo() {
           creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
+      await db.collection("Notificaciones").add({
+       titulo: "Entrada manual al fondo registrada",
+       mensaje: `Se realizó una Entrada manual al fondo de ${cantidad} pesos por motivo de: ${descripcion}`,
+       tipo: "salida_fondo",
+       fecha: firebase.firestore.FieldValue.serverTimestamp(),
+       leido: false
+  });
+
+
       alert("Entrada registrada correctamente.");
       formEntrada.reset();
     } catch (error) {
       console.error("Error al guardar la entrada:", error);
       alert("Ocurrió un error al guardar la entrada.");
     }
+     finally {
+    ocultarLoading();
+    loadPage("frontFondo", "admin/");
+  }
   });
 }
 async function cargarSalidasFondo() {
@@ -594,6 +730,7 @@ function salidasFondo() {
       alert("Por favor complete todos los campos correctamente.");
       return;
     }
+    mostrarLoading();
 
     try {
       await firebase
@@ -606,12 +743,25 @@ function salidasFondo() {
           creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
+     await db.collection("Notificaciones").add({
+       titulo: "Salida de fondo registrada",
+       mensaje: `Se realizó una salida de  ${cantidad} pesos por motivo de: ${motivo}`,
+       tipo: "salida_fondo",
+       fecha: firebase.firestore.FieldValue.serverTimestamp(),
+       leido: false
+  });
+
+
       alert("Salida registrada correctamente.");
       formSalida.reset();
     } catch (error) {
       console.error("Error al registrar la salida:", error);
       alert("Ocurrió un error al registrar la salida.");
     }
+    finally {
+    ocultarLoading();
+    loadPage("frontFondo", "admin/");
+  }
   });
 }
 
@@ -681,7 +831,7 @@ async function cargarEstadoFondo() {
     $("#entradasActividades").text(`$${totalActividades.toLocaleString()}`);
     $("#totalEntradas").text(`$${totalEntradas.toLocaleString()}`);
 
-    $("#totalSalidaManual").text(`$${salidasManuales.toLocaleString()}`);
+    $("#TotalSalidaManual").text(`$${salidasManuales.toLocaleString()}`);
     $("#totalGastos").text(`$${totalGasto.toLocaleString()}`);
     $("#totalSalidas").text(`$${totalSalidas.toLocaleString()}`);
 
@@ -1039,6 +1189,41 @@ function cargarInventario(){
           </tr>
         `);
       });
+    });
+}
+function escucharNotificaciones() {
+
+  db.collection("Notificaciones")
+    .orderBy("fecha", "desc")
+    .limit(8)
+    .onSnapshot(function(snapshot) {
+
+      let contador = 0;
+      let html = "";
+
+      snapshot.forEach(function(doc) {
+
+        const data = doc.data();
+
+        if (!data.leido) contador++;
+
+        html += `
+          <a href="#" class="dropdown-item ${data.leido ? '' : 'font-weight-bold'}">
+            <small class="text-muted">${formatearFecha(data.fecha)}</small><br>
+            ${data.mensaje}
+          </a>
+        `;
+      });
+
+      if (html === "") {
+        html = `<p class="dropdown-item text-center text-muted">
+                  No hay notificaciones
+                </p>`;
+      }
+
+      $("#listaNotificaciones").html(html);
+      $("#contadorNotificaciones").text(contador);
+
     });
 }
 

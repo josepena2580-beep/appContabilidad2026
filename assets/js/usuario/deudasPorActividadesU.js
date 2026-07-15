@@ -45,7 +45,7 @@ $(document).ready(() => {
   });
 
   $("#btnVolver").on("click", () => {
-    loadPage("frontPagos", "admin/");
+    loadPage("frontActividadesU", "usuario/");
   });
 
   // ===============================

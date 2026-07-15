@@ -1,16 +1,26 @@
 <div class="container mt-4">
 
   <div class="card shadow p-4 mb-4" id="estadoFondo">
-    <h3 class="mb-3 text-center text-primary">📊 Estado del Fondo de Actividades</h3>
-
+    <h3 class="mb-3 text-center text-primary">📊 Fondo de Actividades</h3>
+    
+    <div class="card border-primary mt-3">
+      <div class="card-body">
+        <h5 class="card-title text-primary">💰 Estado del Fondo</h5>
+        <p>Total del Fondo: <strong id="saldoFondo">$0</strong></p>
+        <p class="text-primary">En efectivo: <strong id="dineroEfectivo">$0</strong></p>
+        <p class="text-success">Por cobrar: <strong id="deudasPendientes">$0</strong></p>
+      </div>
+    </div>
+     <br>
+     
     <div class="row">
       <!-- Entradas -->
       <div class="col-md-6 mb-3">
         <div class="card border-success h-100">
           <div class="card-body">
             <h5 class="card-title text-success">Entradas</h5>
-            <p>Total Entradas Manuales: <strong id="entradasManuales">$0</strong></p>
-            <p>Total Entradas por Actividades: <strong id="entradasActividades">$0</strong></p>
+            <p>Manuales: <strong id="entradasManuales">$0</strong></p>
+            <p>Por Actividades: <strong id="entradasActividades">$0</strong></p>
             <p class="text-success fw-bold">Total Entradas: <strong id="totalEntradas">$0</strong></p>
           </div>
         </div>
@@ -21,7 +31,7 @@
         <div class="card border-danger h-100">
           <div class="card-body">
             <h5 class="card-title text-danger">Salidas</h5>
-            <p>Salidas Manuales: <strong id="TotalSalidaManual">$0</strong></p>
+            <p>Manuales: <strong id="TotalSalidaManual">$0</strong></p>
             <p>Gastos Actividades: <strong id="totalGastos">$0</strong></p>
             <p class="text-danger fw-bold">Total Salidas: <strong id="totalSalidas">$0</strong></p>
 
@@ -29,21 +39,11 @@
         </div>
       </div>
     </div>
-
-    <!-- Saldo final -->
-    <div class="card border-primary mt-3">
-      <div class="card-body">
-        <h5 class="card-title text-primary">💰 Saldo del Fondo</h5>
-        <p>Saldo total del Fondo: <strong id="saldoFondo">$0</strong></p>
-        <p class="text-primary">Dinero en efectivo en fondo: <strong id="dineroEfectivo">$0</strong></p>
-        <p class="text-success">Deudas por cobrar: <strong id="deudasPendientes">$0</strong></p>
-      </div>
-    </div>
   </div>
 
   <!-- Botones -->
   <div class="d-flex flex-wrap gap-2 justify-content-center">
-<button class="btn btn-primary" onclick="imprimirEstadoFondo()">🖨 Imprimir</button>
+  <button class="btn btn-primary" onclick="imprimirEstadoFondo()">🖨 Imprimir</button>
     <button class="btn btn-danger" onclick="descargarEstadoPDF()">📄 Descargar PDF</button>
     <button type="button" id="atras" class="btn btn-warning">⬅ Atrás</button>
   </div>

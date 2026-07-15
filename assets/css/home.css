@@ -67,3 +67,24 @@
       background-color: rgba(220, 20, 60, 0.479);
       border: 2px solid #f01e1e; /* línea del borde */
      }
+     #listaNotificaciones {
+      position: fixed !important;   /* Se posiciona respecto a la pantalla */
+       top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+  
+      width: 400px;
+      max-width: 95vw;
+      max-height: 80vh;
+      overflow-y: auto;
+
+      display: none;   /* Se controla con JS */
+      z-index: 2000;
+}
+     
+     .noti-mensaje {
+       white-space: normal !important;
+       word-wrap: break-word;
+       overflow-wrap: break-word;
+       text-align: justify;
+}

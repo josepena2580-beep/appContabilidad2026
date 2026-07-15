@@ -1,5 +1,7 @@
 $(function(){
-   
+
+   escucharNotificaciones();
+
 
   window.setTimeout(function(){
    $("#user-name").text(mail);
@@ -16,5 +18,15 @@ $("#btnCerrarSesion").click(function(){
     .catch((error) => {
       alert("Error al cerrar sesión: " + error.message);
     });
-
 })
+$("#notificacionesDropdown").on("click", function() {
+  $("#listaNotificaciones").toggle();
+  db.collection("Notificaciones")
+    .where("leido", "==", false)
+    .get()
+    .then(function(snapshot) {
+      snapshot.forEach(function(doc) {
+        doc.ref.update({ leido: true });
+      });
+    });
+});
