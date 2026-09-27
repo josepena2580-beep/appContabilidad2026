@@ -34,8 +34,27 @@ function loadPage(page, root, variables) {
   root = root === null || root === undefined ? "" : root;
   var url = "templates/" + root + "pages/" + page + ".html";
   var idContent = "content";
+  
+  // 1. Registra el cambio en el historial para que Android/Navegador lo detecte
+  var stateData = { page: page, root: root, variables: variables };
+  history.pushState(stateData, "", "#" + page);
+
+  // 2. Carga el contenido en la pantalla
   loadZone(url + "?" + variables, idContent);
 }
+
+// 3. Escucha cuando el usuario presiona el botón "Atrás" de Android
+window.addEventListener("popstate", function(event) {
+  if (event.state) {
+    // Si hay un estado guardado, recarga esa página sin volver a duplicar el historial
+    var url = "templates/" + event.state.root + "pages/" + event.state.page + ".html";
+    loadZone(url + "?" + event.state.variables, "content");
+  } else {
+    // Si vuelve al inicio o no hay historial, puedes forzar la página principal de admin
+    loadPage("dashboard", "admin/", ""); 
+  }
+});
+
 firebase.auth().onAuthStateChanged(function (user) {
   if (user) {
     console.log("Usuario autenticado:", user.email);
